@@ -1,21 +1,20 @@
-# Xây dựng ResNet50 tùy chỉnh để phân loại ảnh CIFAR-10
+# Custom ResNet50 for CIFAR-10 Image Classification
 
-Dự án xây dựng và huấn luyện ResNet50 **hoàn toàn từ đầu bằng PyTorch thuần** — không dùng `torchvision.models` hay bất kỳ implementation có sẵn nào. Toàn bộ kiến trúc từ Bottleneck block, residual connection đến logic load trọng số đều được tự định nghĩa, nhằm hiểu sâu cơ chế hoạt động của ResNet thay vì chỉ gọi API.
+This project builds and trains ResNet50 **entirely from scratch using pure PyTorch** — no `torchvision.models` or any pre-built implementation. Every component, from the Bottleneck block and residual connections to the weight-loading logic, is defined manually to gain a deep understanding of how ResNet actually works rather than just calling an API.
 
-## Kiến trúc Mô hình
+## Model Architecture
 
-Mô hình được xây từ dưới lên qua 3 lớp trừu tượng: `BotNeck` → `Layer` → `ResNet50`.
+The model is built bottom-up through 3 abstraction layers: `BotNeck` → `Layer` → `ResNet50`.
 
-- **`BotNeck`**: Khối bottleneck tự định nghĩa, thực hiện chuỗi Conv 1×1 → 3×3 → 1×1. Shortcut connection được xử lý thủ công: dùng `Identity` nếu shape khớp, Conv 1×1 nếu cần điều chỉnh.
-- **`Layer`**: Ghép nhiều `BotNeck` lại, khối đầu có thể downsampling (stride=2), các khối sau dùng stride=1.
-- **`ResNet50`**: Lắp ghép toàn bộ theo đúng cấu hình gốc của ResNet50.
+- **`BotNeck`**: A custom bottleneck block implementing the Conv 1×1 → 3×3 → 1×1 sequence. The shortcut connection is handled manually: `Identity` if shapes match, Conv 1×1 if adjustment is needed.
+- **`Layer`**: Stacks multiple `BotNeck` blocks together. The first block may downsample (stride=2); subsequent blocks use stride=1.
+- **`ResNet50`**: Assembles everything following the original ResNet50 configuration.
 
-### Sơ đồ kiến trúc
+### Architecture Diagram
 
-![Sơ đồ kiến trúc](architecture.png)
+![Architecture Diagram](architecture.png)
 
-
-Kiến trúc tổng quan:
+Overview:
 
 1. **Stem**: Conv 7×7, stride=2 → BatchNorm → ReLU → MaxPool
 2. **Residual Layers**:
@@ -25,7 +24,7 @@ Kiến trúc tổng quan:
    - Layer 4: 3 Bottleneck blocks (1024 → 2048)
 3. **Head**: AdaptiveAvgPool → FC(2048 → 10)
 
-## Cài đặt
+## Installation
 
 ```bash
 git clone https://github.com/Ta-Quang-Huy/ResNet50_Custom_Finetuning_CIFAR10.git
@@ -34,21 +33,21 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Tải dữ liệu CIFAR-10 bằng cách chạy các cell đầu trong notebook.
+Download the CIFAR-10 dataset by running the first cells in the notebook.
 
-## Huấn luyện và Đánh giá
+## Training & Evaluation
 
 **Optimizer:** Adam `lr=1e-4`, `weight_decay=1e-4` | **Batch size:** 32 | **Epochs:** 3
 
-### Kết quả huấn luyện
+### Training Results
 
-| Epoch | Loss Train | Loss Val | Accuracy Val |
+| Epoch | Train Loss | Val Loss | Val Accuracy |
 |:---:|:---:|:---:|:---:|
 | 1 | 0.3448 | 0.1398 | 95.24% |
 | 2 | 0.1139 | 0.1497 | 95.42% |
 | 3 | 0.0714 | 0.1423 | 95.96% |
 
-### Kết quả đánh giá — Test Accuracy: **95.17%**
+### Evaluation Results — Test Accuracy: **95.17%**
 
 | Class | Precision | Recall | F1-score | Support |
 |:---|:---:|:---:|:---:|:---:|
@@ -64,10 +63,10 @@ Tải dữ liệu CIFAR-10 bằng cách chạy các cell đầu trong notebook.
 | truck | 0.99 | 0.96 | 0.97 | 1000 |
 | **avg** | **0.95** | **0.95** | **0.95** | **10000** |
 
-## Dự đoán
+## Inference
 
 ```bash
 python inferences.py -i <path_to_image> -w <path_to_weight>
-# Ví dụ:
+# Example:
 python inferences.py -i R.jpg -w best_model.pth
 ```
